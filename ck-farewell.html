@@ -6,14 +6,11 @@
   <title>惜別 CK 留言牆</title>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
-  
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       background: linear-gradient(165deg, #FFF8F0 0%, #FFECD8 30%, #FFD5B8 65%, #F5BAA0 100%);
-      min-height: 100vh;
-      font-family: 'Noto Sans TC', 'PingFang TC', 'Microsoft YaHei', sans-serif;
-      padding: 20px 16px;
+      min-height: 100vh; font-family: 'Noto Sans TC', sans-serif; padding: 20px 16px;
     }
     .container { max-width: 960px; margin: 0 auto; }
     .modal-overlay {
@@ -30,98 +27,85 @@
     .modal-desc { margin: 0 0 18px; color: #8B6644; font-size: 13px; }
     .modal-input {
       width: 100%; border: 2px solid #C49080; border-radius: 10px; padding: 11px 14px;
-      font-size: 16px; font-family: inherit; outline: none; margin-bottom: 6px; text-align: center;
+      font-size: 16px; font-family: inherit; outline: none; margin-bottom: 10px; text-align: center;
     }
-    .modal-input.error { border-color: #C0392B; }
-    .error-text { margin: 0 0 10px; color: #C0392B; font-size: 13px; font-weight: 600; }
     .modal-btn {
-      width: 100%; margin-top: 10px; background: #8B4444; color: #fff;
-      border: none; border-radius: 10px; padding: 12px; font-size: 16px; font-weight: 700; cursor: pointer;
+      width: 100%; background: #8B4444; color: #fff; border: none; border-radius: 10px; padding: 12px; font-size: 16px; font-weight: 700; cursor: pointer;
     }
     .modal-btn-cancel { margin-top: 8px; background: transparent; color: #8B6644; border: none; font-size: 14px; cursor: pointer; padding: 6px; }
     .quiz-options { display: flex; flex-direction: column; gap: 10px; margin-top: 15px; }
     .quiz-btn {
-      background: #FFFDF8; border: 2px solid #C49080; padding: 12px; border-radius: 10px;
-      font-size: 15px; font-weight: 700; color: #4A2820; cursor: pointer; transition: all 0.2s;
+      background: #FFFDF8; border: 2px solid #C49080; padding: 12px; border-radius: 10px; font-size: 15px; font-weight: 700; color: #4A2820; cursor: pointer;
     }
-    .quiz-btn:hover { background: #FFECD8; border-color: #8B4444; }
+    
+    .section-block { display: none; }
+    .section-block.active { display: block; }
+    
     .admin-panel {
-      background: #FFFDF8; border: 2px solid #8B4444; border-radius: 16px; padding: 24px;
-      margin: 0 auto 24px; display: none; flex-direction: column; gap: 20px; box-shadow: 0 6px 20px rgba(0,0,0,0.05);
+      background: #FFFDF8; border: 2px solid #8B4444; border-radius: 16px; padding: 24px; box-shadow: 0 6px 20px rgba(0,0,0,0.05);
     }
-    .admin-panel.active { display: flex; }
-    .admin-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px dashed #FFD5B8; padding-bottom: 12px; }
-    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; }
-    .stat-card { background: #FFECD8; padding: 16px; border-radius: 12px; text-align: center; border: 1px solid rgba(139, 68, 68, 0.1); }
+    .admin-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px dashed #FFD5B8; padding-bottom: 12px; margin-bottom: 15px; }
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 15px; }
+    .stat-card { background: #FFECD8; padding: 16px; border-radius: 12px; text-align: center; }
     .stat-card h4 { color: #8B6644; font-size: 13px; margin-bottom: 6px; }
     .stat-card p { color: #4A2820; font-size: 24px; font-weight: 900; }
-    .admin-controls { display: flex; gap: 10px; flex-wrap: wrap; }
-    .search-input { flex: 1; min-width: 200px; padding: 10px 14px; border: 2px solid #C49080; border-radius: 8px; font-family: inherit; }
-    .action-btn { padding: 10px 16px; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; color: #fff; }
-    .btn-csv { background: #34A853; } .btn-pdf { background: #E06666; }
     .table-container { overflow-x: auto; background: #fff; border-radius: 10px; border: 1px solid #FFD5B8; }
     .msg-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 14px; }
     .msg-table th, .msg-table td { padding: 12px 16px; border-bottom: 1px solid #FFECD8; }
-    .msg-table th { background: #FFD5B8; color: #4A2820; font-weight: 700; }
-    .msg-table tr:hover { background: #FFF8F0; }
-    .btn-del { background: #C0392B; color: #fff; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; }
-    .btn-toggle-view { background: #5B7B9A; color: #fff; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; margin-right: 5px; }
-    .public-wall { margin-top: 30px; background: rgba(255, 255, 255, 0.7); border-radius: 16px; padding: 20px; border: 2px solid rgba(139, 68, 68, 0.15); display: none; }
-    .public-wall.active { display: block; }
-    .public-wall-title { font-weight: 900; color: #4A2820; font-size: 20px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
+    .msg-table th { background: #FFD5B8; color: #4A2820; }
+    .btn-toggle-view { background: #5B7B9A; color: #fff; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; }
+    .btn-toggle-view.hidden-status { background: #C0392B; }
+
+    .public-wall { background: rgba(255, 255, 255, 0.7); border-radius: 16px; padding: 20px; border: 2px solid rgba(139, 68, 68, 0.15); }
     .public-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; }
     .public-card { background: #FFFDF8; border-left: 5px solid #8B4444; padding: 14px; border-radius: 0 12px 12px 0; box-shadow: 0 4px 10px rgba(0,0,0,0.03); }
     .public-card .time { font-size: 11px; color: #8B6644; margin-bottom: 6px; }
     .public-card .text { color: #3D2B1F; font-size: 14px; line-height: 1.5; word-break: break-all; }
+    
     .header { text-align: center; padding-bottom: 22px; }
     .top-controls { display: flex; justify-content: flex-end; gap: 10px; margin-bottom: 10px; }
-    .music-btn, .view-wall-btn { color: #fff; border: none; border-radius: 22px; padding: 9px 22px; font-size: 14px; font-weight: 700; cursor: pointer; box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2); transition: background 0.3s; }
+    .music-btn, .view-wall-btn { color: #fff; border: none; border-radius: 22px; padding: 9px 22px; font-size: 14px; font-weight: 700; cursor: pointer; box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2); }
     .music-btn { background: #5B7B9A; } .music-btn.playing { background: #8B4444; }
     .view-wall-btn { background: #C49A1A; }
-    .header h1 { color: #4A2820; font-size: clamp(30px, 6.5vw, 52px); font-weight: 900; letter-spacing: 5px; margin: 0; text-shadow: 2px 2px 0 rgba(255, 255, 255, 0.65), 0 4px 14px rgba(139, 68, 68, 0.22); }
+    .header h1 { color: #4A2820; font-size: clamp(30px, 6.5vw, 52px); font-weight: 900; letter-spacing: 5px; text-shadow: 2px 2px 0 #fff; }
+    
     .main-layout { display: flex; flex-wrap: wrap; gap: 26px; align-items: flex-start; }
     .left-section { flex: 0 0 280px; max-width: 280px; margin: 0 auto; }
-    .speech-bubble { background: #FFFDF8; border: 3px solid #8B4444; border-radius: 18px; padding: 13px 18px; margin-bottom: 16px; font-size: 15px; font-weight: 700; color: #4A2820; text-align: center; line-height: 1.6; box-shadow: 3px 3px 0 rgba(139, 68, 68, 0.15); position: relative; }
-    .speech-bubble::after { content: ''; position: absolute; bottom: -16px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 13px solid transparent; border-right: 13px solid transparent; border-top: 16px solid #8B4444; z-index: 2; }
-    .speech-bubble::before { content: ''; position: absolute; bottom: -11px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 10px solid transparent; border-right: 10px solid transparent; border-top: 11px solid #FFFDF8; z-index: 3; }
-    .ck-image { width: 100%; border-radius: 16px; display: block; box-shadow: 0 8px 28px rgba(74, 40, 32, 0.28); border: 4px solid rgba(255, 255, 255, 0.8); }
+    .speech-bubble { background: #FFFDF8; border: 3px solid #8B4444; border-radius: 18px; padding: 13px 18px; margin-bottom: 16px; font-size: 15px; font-weight: 700; color: #4A2820; text-align: center; position: relative; }
+    .speech-bubble::after { content: ''; position: absolute; bottom: -16px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 13px solid transparent; border-right: 13px solid transparent; border-top: 16px solid #8B4444; }
+    .ck-image { width: 100%; border-radius: 16px; display: block; border: 4px solid rgba(255, 255, 255, 0.8); }
     .right-section { flex: 1 1 300px; min-width: 260px; }
-    .completion-screen { background: rgba(255, 255, 255, 0.95); border-radius: 20px; padding: 36px 28px; box-shadow: 0 6px 28px rgba(74, 40, 32, 0.18); border: 2px solid rgba(139, 68, 68, 0.2); text-align: center; display: none; }
+    
+    .completion-screen { background: #fff; border-radius: 20px; padding: 36px 28px; text-align: center; display: none; }
     .completion-screen.active { display: block; }
-    .completion-icon { font-size: 64px; line-height: 1; margin-bottom: 12px; }
-    .completion-title { margin: 0 0 8px; color: #4A2820; font-weight: 900; font-size: clamp(18px, 4vw, 26px); }
-    .completion-subtitle { margin: 0 0 24px; color: #8B4444; font-weight: 900; font-size: clamp(22px, 5vw, 34px); letter-spacing: 3px; text-shadow: 1px 1px 0 rgba(139, 68, 68, 0.2); }
-    .completion-divider { width: 60px; height: 3px; background: #C49A1A; margin: 0 auto 24px; border-radius: 2px; }
-    .completion-message { margin: 0 0 20px; color: #8B6644; font-size: 14px; line-height: 1.6; }
-    .retry-btn { background: transparent; color: #8B6644; border: 2px solid #C49080; border-radius: 10px; padding: 10px 24px; font-size: 14px; font-weight: 600; cursor: pointer; }
-    .form-container { background: rgba(255, 255, 255, 0.92); border-radius: 16px; padding: 20px; box-shadow: 0 4px 20px rgba(74, 40, 32, 0.12); border: 2px solid rgba(139, 68, 68, 0.18); margin-bottom: 16px; display: block; }
-    .form-container.hidden { display: none; }
-    .form-label { margin: 0 0 10px; font-weight: 700; color: #4A2820; font-size: 15px; }
-    .form-textarea { width: 100%; border: 2px solid #C49080; border-radius: 10px; padding: 12px; font-size: 16px; resize: vertical; font-family: inherit; outline: none; color: #3D2B1F; background: #FFF9F5; display: block; }
-    .form-textarea:focus { border-color: #8B4444; box-shadow: 0 0 0 3px rgba(139, 68, 68, 0.15); }
-    .submit-btn { margin-top: 12px; width: 100%; background: #C4A8A0; color: #fff; border: none; border-radius: 12px; padding: 16px; font-size: 17px; font-weight: 700; cursor: pointer; box-shadow: none; opacity: 1; transition: background 0.15s, box-shadow 0.15s; }
-    .submit-btn:not(:disabled) { background: #8B4444; box-shadow: 0 4px 0 #5A2222; }
-    .submit-btn:disabled { opacity: 0.7; }
-    .error-message { margin-top: 10px; padding: 12px; border-radius: 10px; background: #FEEDED; color: #7A1C1C; font-weight: 600; font-size: 14px; text-align: center; border: 1px solid #F5B8B8; display: none; }
-    .error-message.active { display: block; }
-    .privacy-notice { background: rgba(255, 255, 255, 0.6); border-radius: 12px; padding: 12px 16px; border: 1px dashed #C49080; color: #8B6644; font-size: 13px; line-height: 1.6; margin-top: 4px; }
-    .admin-toggle { position: fixed; bottom: 22px; right: 22px; width: 48px; height: 48px; background: rgba(139, 68, 68, 0.18); border: 2px solid rgba(139, 68, 68, 0.35); border-radius: 50%; cursor: pointer; font-size: 20px; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(4px); box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12); outline: none; transition: background 0.3s; z-index: 999; }
+    .form-container { background: rgba(255, 255, 255, 0.92); border-radius: 16px; padding: 20px; border: 2px solid rgba(139, 68, 68, 0.18); }
+    .form-textarea { width: 100%; border: 2px solid #C49080; border-radius: 10px; padding: 12px; font-size: 16px; resize: vertical; font-family: inherit; background: #FFF9F5; outline: none; }
+    .submit-btn { margin-top: 12px; width: 100%; background: #8B4444; color: #fff; border: none; border-radius: 12px; padding: 16px; font-size: 17px; font-weight: 700; cursor: pointer; }
+    .submit-btn:disabled { background: #C4A8A0; }
+    .admin-toggle { position: fixed; bottom: 22px; right: 22px; width: 48px; height: 48px; background: rgba(139, 68, 68, 0.18); border: 2px solid rgba(139, 68, 68, 0.35); border-radius: 50%; cursor: pointer; font-size: 20px; display: flex; align-items: center; justify-content: center; z-index: 999; }
     .admin-toggle.active { background: #8B4444; }
-    button:active { opacity: 0.82; }
   </style>
 </head>
 <body>
 
   <div id="modalOverlay" class="modal-overlay">
-    <form id="loginForm" class="modal-form">
-      <div class="modal-icon">🔐</div>
-      <h3 class="modal-title">管理員登入</h3>
-      <p class="modal-desc">輸入密碼後進入管理面板</p>
-      <input id="pwInput" type="password" class="modal-input" placeholder="管理員密碼" autocomplete="off">
-      <div id="pwError" class="error-text" style="display: none;">密碼錯誤</div>
-      <button type="submit" class="modal-btn">進入</button>
-      <button type="button" class="modal-btn-cancel" id="cancelLogin">取消</button>
-    </form>
+    <div class="modal-form" id="emailStep">
+      <div class="modal-icon">✉️</div>
+      <h3 class="modal-title">管理員驗證</h3>
+      <p class="modal-desc">請輸入指定的管理員 Email</p>
+      <input id="adminEmailInput" type="email" class="modal-input" placeholder="example@gmail.com">
+      <button type="button" class="modal-btn" onclick="requestOTP()">發送驗證碼</button>
+      <button type="button" class="modal-btn-cancel" onclick="closeLogin()">取消</button>
+    </div>
+    
+    <div class="modal-form" id="otpStep" style="display:none;">
+      <div class="modal-icon">🔑</div>
+      <h3 class="modal-title">輸入驗證碼</h3>
+      <p class="modal-desc" id="otpNotice">驗證碼已寄出</p>
+      <input id="adminOtpInput" type="text" class="modal-input" placeholder="6 位數驗證碼">
+      <button type="button" class="modal-btn" onclick="verifyOTP()">驗證登入</button>
+      <button type="button" class="modal-btn-cancel" onclick="backToEmail()">返回</button>
+    </div>
   </div>
 
   <div id="quizOverlay" class="modal-overlay">
@@ -134,222 +118,315 @@
         <button type="button" class="quiz-btn" onclick="passQuiz()">B. 陳香如</button>
         <button type="button" class="quiz-btn" onclick="passQuiz()">C. Beautyru</button>
       </div>
-      <button type="button" class="modal-btn-cancel" id="cancelQuiz" style="margin-top:15px;">不想看了</button>
+      <button type="button" class="modal-btn-cancel" onclick="document.getElementById('quizOverlay').classList.remove('active')">不想看了</button>
     </div>
   </div>
 
   <div class="container">
-    <div id="adminPanel" class="admin-panel">
-      <div class="admin-header">
-        <h3 style="color:#4A2820; font-weight:900;">📊 後台管理數據中心</h3>
-        <button type="button" style="background:#C49080; color:#fff; border:none; padding:10px 16px; border-radius:10px; cursor:pointer; font-weight:700;" id="logoutBtn">安全登出</button>
-      </div>
-      <div class="stats-grid">
-        <div class="stat-card"><h4>總留言數</h4><p id="statTotal">0</p></div>
-        <div class="stat-card"><h4>公開顯示</h4><p id="statVisible">0</p></div>
-        <div class="stat-card"><h4>今日新增</h4><p id="statToday">0</p></div>
-      </div>
-      <div class="admin-controls">
-        <input type="text" id="searchBar" class="search-input" placeholder="🔍 搜尋留言關鍵字...">
-        <button type="button" class="action-btn btn-csv" onclick="console.log('待接Python API: 導出CSV')">📥 導出 CSV</button>
-        <button type="button" class="action-btn btn-pdf" onclick="console.log('待接Python API: 導出PDF')">📄 導出 PDF</button>
-      </div>
-      <div class="table-container">
-        <table class="msg-table">
-          <thead>
-            <tr><th style="width: 180px;">時間</th><th>留言內容</th><th style="width: 150px; text-align: center;">操作管理</th></tr>
-          </thead>
-          <tbody id="adminTableBody">
-            </tbody>
-        </table>
-      </div>
-    </div>
-
     <div class="header">
       <div class="top-controls">
-        <button id="viewWallBtn" class="view-wall-btn">👀 點我看留言</button>
-        <button id="musicBtn" class="music-btn">🎻 播放悲樂</button>
+        <button id="viewWallBtn" class="view-wall-btn" onclick="openQuiz()">👀 點我看留言</button>
+        <button id="musicBtn" class="music-btn" onclick="toggleMusic()">🎻 播放悲樂</button>
       </div>
       <h1>惜別 CK 留言牆</h1>
     </div>
 
-    <div class="main-layout">
-      <div class="left-section">
-        <div class="speech-bubble">有什麼問題想問我，<br/>或想說的祝福嗎？</div>
-        <img id="ckImage" src="CK.png" alt="惜別CK" class="ck-image">
-      </div>
-
-      <div class="right-section">
-        <div id="completionScreen" class="completion-screen">
-          <div class="completion-icon">🎉</div>
-          <h2 class="completion-title">留言已送出！</h2>
-          <p class="completion-subtitle">期待活動見！</p>
-          <div class="completion-divider"></div>
-          <p class="completion-message">謝謝你的留言 🙏<br/>CK 會在活動中看到你說的話</p>
-          <button type="button" class="retry-btn" id="retryBtn">＋ 再留一則訊息</button>
+    <div id="blockFrontend" class="section-block active">
+      <div class="main-layout">
+        <div class="left-section">
+          <div class="speech-bubble">有什麼問題想問我，<br/>或想說的祝福嗎？</div>
+          <img id="ckImage" src="CK.png" alt="惜別CK" class="ck-image">
         </div>
-
-        <form id="messageForm" class="form-container">
-          <p class="form-label">✍️ 留下你的匿名訊息</p>
-          <textarea id="msgInput" class="form-textarea" placeholder="寫下問題或祝福..." rows="4"></textarea>
-          <button type="submit" class="submit-btn" id="submitBtn">🚀 送出訊息</button>
-          <div id="errorMessage" class="error-message"></div>
-        </form>
-
-        <div class="privacy-notice">🔒 你的留言將會即時發送到雲端後台。</div>
+        <div class="right-section">
+          <div id="completionScreen" class="completion-screen">
+            <div class="completion-icon">🎉</div>
+            <h2 class="completion-title">留言已送出！</h2>
+            <p class="completion-message">謝謝你的祝福 🙏</p>
+            <button type="button" style="background:none; border:2px solid #C49080; padding:10px 20px; border-radius:10px; cursor:pointer;" onclick="resetForm()">＋ 再留一則訊息</button>
+          </div>
+          <form id="messageForm" class="form-container" onsubmit="submitMessage(event)">
+            <textarea id="msgInput" class="form-textarea" placeholder="寫下問題或祝福..." rows="4" oninput="updateSubmitBtn()"></textarea>
+            <button type="submit" class="submit-btn" id="submitBtn" disabled>🚀 送出訊息</button>
+          </form>
+        </div>
       </div>
     </div>
 
-    <div id="publicWall" class="public-wall">
-      <div class="public-wall-title">
-        <span>💌 大家給 CK 的祝福與提問</span>
+    <div id="blockPublicWall" class="section-block">
+      <div class="public-wall">
+        <h3 style="margin-bottom:15px; color:#4A2820;">💌 大家給 CK 的祝福與提問</h3>
+        <div id="publicGrid" class="public-grid"></div>
+        <button type="button" class="modal-btn" style="margin-top:20px; background:#5B7B9A;" onclick="showWriteBlock()">✍️ 我也要寫留言</button>
       </div>
-      <div id="publicGrid" class="public-grid">
+    </div>
+
+    <div id="blockAdmin" class="section-block">
+      <div class="admin-panel">
+        <div class="admin-header">
+          <h3 style="color:#4A2820; font-weight:900;">📊 後台管理數據中心</h3>
+          <button type="button" style="background:#C49080; color:#fff; border:none; padding:10px 16px; border-radius:10px; cursor:pointer;" onclick="logout()">安全登出</button>
         </div>
+        <div class="stats-grid">
+          <div class="stat-card"><h4>總留言數</h4><p id="statTotal">0</p></div>
+          <div class="stat-card"><h4>公開顯示</h4><p id="statVisible">0</p></div>
+        </div>
+        <div class="table-container">
+          <table class="msg-table">
+            <thead>
+              <tr><th style="width: 160px;">時間</th><th>留言內容</th><th style="width: 120px; text-align: center;">操作管理</th></tr>
+            </thead>
+            <tbody id="adminTableBody"></tbody>
+          </table>
+        </div>
+      </div>
     </div>
   </div>
 
-  <button type="button" id="adminToggle" class="admin-toggle">🔒</button>
+  <button type="button" id="adminToggle" class="admin-toggle" onclick="handleAdminToggle()">🔒</button>
 
   <script>
-    const ADMIN_PW = "CK2026";
-    let appState = {
-      msg: "", done: false, submitting: false, showLogin: false,
-      pwErr: false, isAdmin: false, playing: false, audioReady: false, showPublicWall: false
+    const API_BASE = "https://ck-farewell.onrender.com/"; 
+    
+    // 初始化直接讀取本地儲存
+    let state = { 
+      email: localStorage.getItem("admin_email") || "", 
+      token: localStorage.getItem("admin_token") || "", 
+      playing: false, 
+      audioReady: false 
     };
-
-    // 修正：將音訊元件宣告在全域，避免作用域問題導致二次播放失敗
+    
     let reverb, master, strings, violin, cello, CP, BP, MP;
 
-    const elements = {
-      modalOverlay: document.getElementById("modalOverlay"),
-      loginForm: document.getElementById("loginForm"),
-      pwInput: document.getElementById("pwInput"),
-      pwError: document.getElementById("pwError"),
-      cancelLogin: document.getElementById("cancelLogin"),
-      adminPanel: document.getElementById("adminPanel"),
-      logoutBtn: document.getElementById("logoutBtn"),
-      musicBtn: document.getElementById("musicBtn"),
-      messageForm: document.getElementById("messageForm"),
-      msgInput: document.getElementById("msgInput"),
-      submitBtn: document.getElementById("submitBtn"),
-      errorMessage: document.getElementById("errorMessage"),
-      completionScreen: document.getElementById("completionScreen"),
-      retryBtn: document.getElementById("retryBtn"),
-      adminToggle: document.getElementById("adminToggle"),
-      viewWallBtn: document.getElementById("viewWallBtn"),
-      quizOverlay: document.getElementById("quizOverlay"),
-      cancelQuiz: document.getElementById("cancelQuiz"),
-      publicWall: document.getElementById("publicWall")
-    };
-
-    // 表單輸入與送出
-    elements.msgInput.addEventListener("input", (e) => { appState.msg = e.target.value; updateSubmitBtn(); });
-    elements.messageForm.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      if (!appState.msg.trim() || appState.submitting) return;
-      
-      console.log("【待對接 FastAPI POST】準備送出留言：", appState.msg.trim());
-      
-      appState.done = true;
-      appState.msg = "";
-      elements.msgInput.value = "";
-      render();
-    });
-
-    // 挑戰通關
-    function passQuiz() {
-      elements.quizOverlay.classList.remove("active");
-      appState.showPublicWall = true;
-      render();
-      elements.publicWall.scrollIntoView({ behavior: 'smooth' });
-      console.log("【待對接 FastAPI GET】通關成功，準備拉取公開留言牆");
+    function switchBlock(blockId) {
+      document.querySelectorAll(".section-block").forEach(b => b.classList.remove("active"));
+      document.getElementById(blockId).classList.add("active");
     }
 
     function updateSubmitBtn() {
-      const hasText = appState.msg.trim().length > 0;
-      elements.submitBtn.disabled = !hasText || appState.submitting;
-      elements.submitBtn.style.background = hasText ? "#8B4444" : "#C4A8A0";
+      const val = document.getElementById("msgInput").value.trim();
+      document.getElementById("submitBtn").disabled = val.length === 0;
     }
 
-    elements.viewWallBtn.addEventListener("click", () => elements.quizOverlay.classList.add("active"));
-    elements.cancelQuiz.addEventListener("click", () => elements.quizOverlay.classList.remove("active"));
-    elements.adminToggle.addEventListener("click", () => { if (appState.isAdmin) logout(); else openLogin(); });
-    elements.loginForm.addEventListener("submit", tryLogin);
-    elements.cancelLogin.addEventListener("click", closeLogin);
-    elements.logoutBtn.addEventListener("click", logout);
-    elements.musicBtn.addEventListener("click", toggleMusic);
-    elements.retryBtn.addEventListener("click", () => { appState.done = false; render(); });
-
-    function openLogin() { appState.showLogin = true; render(); setTimeout(() => elements.pwInput.focus(), 100); }
-    function closeLogin() { appState.showLogin = false; appState.pwInput = ""; appState.pwErr = false; render(); }
-    function tryLogin(e) {
-      e.preventDefault();
-      if (elements.pwInput.value === ADMIN_PW) {
-        appState.isAdmin = true; appState.showLogin = false; appState.pwErr = false;
-        console.log("【待對接 FastAPI 後台驗證】登入成功，準備拉取所有管理數據");
-      } else { appState.pwErr = true; }
-      elements.pwInput.value = ""; render();
-    }
-    function logout() { appState.isAdmin = false; render(); }
-
-    // ⚠️ 修正後的 Tone.js 悲樂控制邏輯
-    async function toggleMusic() {
-      if (!appState.audioReady) {
+    // 網頁載入完成後自動檢查長期憑證
+    window.addEventListener("DOMContentLoaded", async () => {
+      if (state.token && state.email) {
+        document.getElementById("adminToggle").textContent = "🔓";
+        document.getElementById("adminToggle").classList.add("active");
+        switchBlock("blockAdmin");
+        
         try {
-          await Tone.start();
-          Tone.Transport.bpm.value = 50; 
-          Tone.Transport.timeSignature = [4, 4];
-          
-          reverb = new Tone.Reverb({ decay: 7, wet: 0.68, preDelay: 0.03 }); 
-          await reverb.generate();
-          
-          master = new Tone.Volume(-4).toDestination(); 
-          reverb.connect(master);
-          
-          strings = new Tone.PolySynth(Tone.Synth, { oscillator: { type: "triangle8" }, envelope: { attack: 2.2, decay: 0.4, sustain: 0.75, release: 6 }, volume: -18 }).connect(reverb);
-          violin = new Tone.Synth({ oscillator: { type: "sawtooth4" }, envelope: { attack: 0.5, decay: 0.2, sustain: 0.9, release: 5 }, volume: -10, portamento: 0.07 });
-          
-          new Tone.Tremolo({ frequency: 4.5, depth: 0.2 }).start().chain(violin, reverb);
-          
-          cello = new Tone.Synth({ oscillator: { type: "triangle" }, envelope: { attack: 1.2, decay: 0.5, sustain: 0.75, release: 5 }, volume: -24 }).connect(reverb);
-          
-          CP = new Tone.Part((t, v) => strings.triggerAttackRelease(v.n, v.d, t), [{ time: "0:0:0", n: ["D3", "F3", "A3", "D4"], d: "2m" }, { time: "2:0:0", n: ["C3", "E3", "G3", "C4"], d: "2m" }, { time: "4:0:0", n: ["Bb2", "D3", "F3", "Bb3"], d: "2m" }, { time: "6:0:0", n: ["A2", "C#3", "E3", "A3"], d: "2m" }]);
-          CP.loop = true; CP.loopEnd = "8m"; CP.start(0);
-          
-          BP = new Tone.Part((t, v) => cello.triggerAttackRelease(v.n, v.d, t), [{ time: "0:0:0", n: "D2", d: "1m" }, { time: "1:0:0", n: "D2", d: "1m" }, { time: "2:0:0", n: "C2", d: "1m" }, { time: "3:0:0", n: "C2", d: "1m" }, { time: "4:0:0", n: "Bb1", d: "1m" }, { time: "5:0:0", n: "Bb1", d: "1m" }, { time: "6:0:0", n: "A1", d: "1m" }, { time: "7:0:0", n: "A1", d: "1m" }]);
-          BP.loop = true; BP.loopEnd = "8m"; BP.start(0);
-          
-          MP = new Tone.Part((t, v) => violin.triggerAttackRelease(v.n, v.d, t), [{ time: "0:0:0", n: "F5", d: "2n" }, { time: "0:2:0", n: "E5", d: "2n" }, { time: "1:0:0", n: "D5", d: "2n." }, { time: "1:3:0", n: "C5", d: "4n" }, { time: "2:0:0", n: "E5", d: "2n" }, { time: "2:2:0", n: "D5", d: "2n" }, { time: "3:0:0", n: "C5", d: "2n." }, { time: "3:3:0", n: "Bb4", d: "4n" }, { time: "4:0:0", n: "D5", d: "2n" }, { time: "4:2:0", n: "C5", d: "2n" }, { time: "5:0:0", n: "Bb4", d: "2n" }, { time: "5:2:0", n: "A4", d: "2n" }, { time: "6:0:0", n: "G4", d: "2n" }, { time: "6:2:0", n: "F4", d: "4n" }, { time: "6:3:0", n: "E4", d: "4n" }, { time: "7:0:0", n: "A4", d: "1m" }]);
-          MP.loop = true; MP.loopEnd = "8m"; MP.start("+0.05");
-          
-          Tone.Transport.start(); 
-          appState.audioReady = true; 
-          appState.playing = true;
-        } catch (err) { console.error(err); }
-      } else {
-        if (appState.playing) Tone.Transport.pause(); else Tone.Transport.start();
-        appState.playing = !appState.playing;
+          const res = await fetch(`${API_BASE}/api/admin/check-token`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email: state.email, otp: state.token })
+          });
+          if (res.ok) {
+            const data = await res.json();
+            renderAdmin(data); 
+          } else {
+            logout(); 
+          }
+        } catch(e) { console.error("自動載入失敗", e); logout(); }
       }
-      render();
+    });
+
+    async function submitMessage(e) {
+      e.preventDefault();
+      const text = document.getElementById("msgInput").value.trim();
+      try {
+        const res = await fetch(`${API_BASE}/api/messages/submit`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text })
+        });
+        if(res.ok) {
+          document.getElementById("messageForm").style.display = "none";
+          document.getElementById("completionScreen").style.display = "block";
+        }
+      } catch(err) { alert("連後端失敗"); }
     }
 
-    function render() {
-      elements.modalOverlay.classList.toggle("active", appState.showLogin);
-      elements.pwInput.classList.toggle("error", appState.pwErr);
-      elements.pwError.style.display = appState.pwErr ? "block" : "none";
-      elements.adminPanel.classList.toggle("active", appState.isAdmin);
-      elements.adminToggle.classList.toggle("active", appState.isAdmin);
-      elements.adminToggle.textContent = appState.isAdmin ? "🔓" : "🔒";
-      elements.musicBtn.classList.toggle("playing", appState.playing);
-      elements.musicBtn.textContent = appState.playing ? "⏸ 暫停音樂" : "🎻 播放悲樂";
-      elements.messageForm.classList.toggle("hidden", appState.done);
-      elements.completionScreen.classList.toggle("active", appState.done);
-      elements.publicWall.classList.toggle("active", appState.showPublicWall);
+    function resetForm() {
+      document.getElementById("msgInput").value = "";
+      document.getElementById("messageForm").style.display = "block";
+      document.getElementById("completionScreen").style.display = "none";
       updateSubmitBtn();
     }
 
-    render();
+    function openQuiz() { document.getElementById("quizOverlay").classList.add("active"); }
+    async function passQuiz() {
+      document.getElementById("quizOverlay").classList.remove("active");
+      switchBlock("blockPublicWall"); 
+      await fetchPublicMessages();
+    }
+
+    function showWriteBlock() { switchBlock("blockFrontend"); }
+
+    async function fetchPublicMessages() {
+      try {
+        const res = await fetch(`${API_BASE}/api/messages/public`);
+        const data = await res.json();
+        document.getElementById("publicGrid").innerHTML = data.map(m => `
+          <div class="public-card">
+            <div class="time">${m.timestamp}</div>
+            <div class="text">${escapeHtml(m.content)}</div>
+          </div>
+        `).join('');
+      } catch(err) { console.error(err); }
+    }
+
+    function handleAdminToggle() {
+      if(state.token) { 
+        // 如果已經是登入狀態，點擊鎖頭就只是在「管理後台」跟「前台表單」切換，不強制登出！
+        const isAdminActive = document.getElementById("blockAdmin").classList.contains("active");
+        if(isAdminActive) switchBlock("blockFrontend"); else switchBlock("blockAdmin");
+      } else { 
+        document.getElementById("modalOverlay").classList.add("active"); 
+      }
+    }
+    
+    function closeLogin() { document.getElementById("modalOverlay").classList.remove("active"); }
+    function backToEmail() {
+      document.getElementById("emailStep").style.display = "block";
+      document.getElementById("otpStep").style.display = "none";
+    }
+
+    async function requestOTP() {
+      const email = document.getElementById("adminEmailInput").value.trim();
+      if(!email) return alert("請輸入 Email");
+      try {
+        const res = await fetch(`${API_BASE}/api/admin/request-otp`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email })
+        });
+        if(res.ok) {
+          state.email = email;
+          document.getElementById("otpNotice").textContent = `驗證碼已寄至 ${email}`;
+          document.getElementById("emailStep").style.display = "none";
+          document.getElementById("otpStep").style.display = "block";
+        } else { alert("您不是合法的管理員！"); }
+      } catch(err) { alert("連線後端失敗"); }
+    }
+
+    async function verifyOTP() {
+      const otp = document.getElementById("adminOtpInput").value.trim();
+      try {
+        const res = await fetch(`${API_BASE}/api/admin/verify`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: state.email, otp })
+        });
+        if(res.ok) {
+          const data = await res.json();
+          state.token = data.token; 
+          
+          localStorage.setItem("admin_email", state.email);
+          localStorage.setItem("admin_token", data.token);
+          
+          document.getElementById("modalOverlay").classList.remove("active");
+          document.getElementById("adminToggle").textContent = "🔓";
+          document.getElementById("adminToggle").classList.add("active");
+          
+          switchBlock("blockAdmin"); 
+          renderAdmin(data);
+        } else { alert("驗證碼錯誤或已過期"); }
+      } catch(err) { alert("驗證連線失敗"); }
+    }
+
+    function renderAdmin(data) {
+      document.getElementById("statTotal").textContent = data.stats.total;
+      document.getElementById("statVisible").textContent = data.stats.visible;
+      document.getElementById("adminTableBody").innerHTML = data.messages.map(m => `
+        <tr>
+          <td>${m.timestamp}</td>
+          <td>${escapeHtml(m.content)}</td>
+          <td style="text-align:center;">
+            <button type="button" id="btn-toggle-${m.id}" class="btn-toggle-view ${m.is_visible ? '' : 'hidden-status'}" onclick="toggleMessage(${m.id}, event)">
+              ${m.is_visible ? "👁️ 顯示中" : "❌ 已隱藏"}
+            </button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    async function toggleMessage(msgId, event) {
+      // 保險 1：如果有點擊事件傳進來，強制阻止瀏覽器的任何預設跳轉或重整行為
+      if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+
+      try {
+        const res = await fetch(`${API_BASE}/api/admin/toggle/${msgId}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: state.email, otp: state.token }) 
+        });
+        if(res.ok) {
+          const data = await res.json();
+          
+          // 更新統計數字
+          document.getElementById("statTotal").textContent = data.stats.total;
+          document.getElementById("statVisible").textContent = data.stats.visible;
+          
+          // 精準局部變色
+          const theBtn = document.getElementById(`btn-toggle-${msgId}`);
+          if (theBtn) {
+            if (theBtn.classList.contains("hidden-status")) {
+              theBtn.classList.remove("hidden-status");
+              theBtn.textContent = "👁️ 顯示中";
+            } else {
+              theBtn.classList.add("hidden-status");
+              theBtn.textContent = "❌ 已隱藏";
+            }
+          }
+        } else {
+          alert("操作憑證失效，請重新登入"); logout();
+        }
+      } catch(err) { alert("操作失敗"); }
+    }
+
+    function logout() {
+      state.token = ""; state.email = "";
+      localStorage.removeItem("admin_email");
+      localStorage.removeItem("admin_token");
+      
+      document.getElementById("adminToggle").textContent = "🔒";
+      document.getElementById("adminToggle").classList.remove("active");
+      document.getElementById("adminEmailInput").value = "";
+      document.getElementById("adminOtpInput").value = "";
+      backToEmail();
+      switchBlock("blockFrontend"); 
+    }
+
+    function escapeHtml(str) {
+      return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+    }
+
+    // 悲樂控制
+    async function toggleMusic() {
+      if (!state.audioReady) {
+        try {
+          await Tone.start(); Tone.Transport.bpm.value = 50; Tone.Transport.timeSignature = [4, 4];
+          reverb = new Tone.Reverb({ decay: 7, wet: 0.68, preDelay: 0.03 }); await reverb.generate();
+          master = new Tone.Volume(-4).toDestination(); reverb.connect(master);
+          strings = new Tone.PolySynth(Tone.Synth, { oscillator: { type: "triangle8" }, envelope: { attack: 2.2, decay: 0.4, sustain: 0.75, release: 6 }, volume: -18 }).connect(reverb);
+          violin = new Tone.Synth({ oscillator: { type: "sawtooth4" }, envelope: { attack: 0.5, decay: 0.2, sustain: 0.9, release: 5 }, volume: -10, portamento: 0.07 });
+          new Tone.Tremolo({ frequency: 4.5, depth: 0.2 }).start().chain(violin, reverb);
+          cello = new Tone.Synth({ oscillator: { type: "triangle" }, envelope: { attack: 1.2, decay: 0.5, sustain: 0.75, release: 5 }, volume: -24 }).connect(reverb);
+          CP = new Tone.Part((t, v) => strings.triggerAttackRelease(v.n, v.d, t), [{ time: "0:0:0", n: ["D3", "F3", "A3", "D4"], d: "2m" }, { time: "2:0:0", n: ["C3", "E3", "G3", "C4"], d: "2m" }, { time: "4:0:0", n: ["Bb2", "D3", "F3", "Bb3"], d: "2m" }, { time: "6:0:0", n: ["A2", "C#3", "E3", "A3"], d: "2m" }]); CP.loop = true; CP.loopEnd = "8m"; CP.start(0);
+          BP = new Tone.Part((t, v) => cello.triggerAttackRelease(v.n, v.d, t), [{ time: "0:0:0", n: "D2", d: "1m" }, { time: "1:0:0", n: "D2", d: "1m" }, { time: "2:0:0", n: "C2", d: "1m" }, { time: "3:0:0", n: "C2", d: "1m" }, { time: "4:0:0", n: "Bb1", d: "1m" }, { time: "5:0:0", n: "Bb1", d: "1m" }, { time: "6:0:0", n: "A1", d: "1m" }, { time: "7:0:0", n: "A1", d: "1m" }]); BP.loop = true; BP.loopEnd = "8m"; BP.start(0);
+          MP = new Tone.Part((t, v) => violin.triggerAttackRelease(v.n, v.d, t), [{ time: "0:0:0", n: "F5", d: "2n" }, { time: "0:2:0", n: "E5", d: "2n" }, { time: "1:0:0", n: "D5", d: "2n." }, { time: "1:3:0", n: "C5", d: "4n" }, { time: "2:0:0", n: "E5", d: "2n" }, { time: "2:2:0", n: "D5", d: "2n" }, { time: "3:0:0", n: "C5", d: "2n." }, { time: "3:3:0", n: "Bb4", d: "4n" }, { time: "4:0:0", n: "D5", d: "2n" }, { time: "4:2:0", n: "C5", d: "2n" }, { time: "5:0:0", n: "Bb4", d: "2n" }, { time: "5:2:0", n: "A4", d: "2n" }, { time: "6:0:0", n: "G4", d: "2n" }, { time: "6:2:0", n: "F4", d: "4n" }, { time: "6:3:0", n: "E4", d: "4n" }, { time: "7:0:0", n: "A4", d: "1m" }]); MP.loop = true; MP.loopEnd = "8m"; MP.start("+0.05");
+          Tone.Transport.start(); state.audioReady = true; state.playing = true;
+        } catch (err) { console.error(err); }
+      } else {
+        if (state.playing) Tone.Transport.pause(); else Tone.Transport.start();
+        state.playing = !state.playing;
+      }
+      document.getElementById("musicBtn").classList.toggle("playing", state.playing);
+      document.getElementById("musicBtn").textContent = state.playing ? "⏸ 暫停音樂" : "🎻 播放悲樂";
+    }
   </script>
 </body>
 </html>
