@@ -23,8 +23,8 @@ OTP_STORE = {}
 
 ADMIN_EMAIL_LIST = ["paulpb0725@gmail.com", "chunhansung@gmail.com"]
 
-SMTP_USER = os.getenv("SMTP_USER")      
-SMTP_PASSWORD = os.getenv("SMTP_PASSWORD") 
+SMTP_USER = "paulpb0725@gmail.com"    
+SMTP_PASSWORD = "jpzauitvidrijrdz"
 
 if not os.path.exists(DB_FILE):
     with open(DB_FILE, "w", encoding="utf-8") as f:
