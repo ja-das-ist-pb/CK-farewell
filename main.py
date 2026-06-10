@@ -7,28 +7,38 @@ from email.mime.text import MIMEText
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+import firebase_admin
+from firebase_admin import credentials
+from firebase_admin import firestore
+
+firebase_creds = json.loads(
+    os.environ["FIREBASE_CREDENTIALS"]
+)
+
+cred = credentials.Certificate(firebase_creds)
+
+firebase_admin.initialize_app(cred)
+
+db_firestore = firestore.client()
 
 app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_credentials=True,
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-DB_FILE = "messages.json"
+
 OTP_STORE = {} 
 
 ADMIN_EMAIL_LIST = ["paulpb0725@gmail.com", "chunhansung@gmail.com"]
 
-SMTP_USER = "paulpb0725@gmail.com"    
-SMTP_PASSWORD = "jpzauitvidrijrdz"
+SMTP_USER = os.getenv("SMTP_USER")
+SMTP_PASSWORD = os.getenv("SMTP_PASSWORD")
 
-if not os.path.exists(DB_FILE):
-    with open(DB_FILE, "w", encoding="utf-8") as f:
-        json.dump([], f)
 
 class MessageInput(BaseModel):
     text: str
@@ -40,13 +50,27 @@ class VerifyInput(BaseModel):
     email: str
     otp: str  # 登入時傳入6位數驗證碼，後續操作時傳入長期 Token
 
-def read_db():
-    with open(DB_FILE, "r", encoding="utf-8") as f:
-        return json.load(f)
+def get_all_messages():
+    docs = db_firestore.collection("messages").stream()
 
-def write_db(data):
-    with open(DB_FILE, "w", encoding="utf-8") as f:
-        json.dump(data, f, ensure_ascii=False, indent=2)
+    messages = []
+
+    for doc in docs:
+        item = doc.to_dict()
+        item["id"] = doc.id
+        messages.append(item)
+
+    return messages
+
+
+def get_stats(messages):
+    return {
+        "total": len(messages),
+        "visible": sum(
+            1 for m in messages
+            if m["is_visible"]
+        )
+    }
 
 def send_otp_email(target_email: str, otp: str):
     if not SMTP_USER or not SMTP_PASSWORD:
@@ -74,24 +98,30 @@ def send_otp_email(target_email: str, otp: str):
 def submit_message(data: MessageInput):
     if not data.text.strip():
         raise HTTPException(status_code=400, detail="留言不能為空")
-    db = read_db()
-    new_id = max([m["id"] for m in db], default=0) + 1
     new_msg = {
-        "id": new_id,
-        "timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "timestamp":
+            datetime.datetime.now().strftime(
+                "%Y-%m-%d %H:%M:%S"
+            ),
         "content": data.text.strip(),
         "is_visible": True,
         "is_pinned": False
     }
-    db.append(new_msg)
-    write_db(db)
+
+    db_firestore.collection(
+        "messages"
+    ).add(new_msg)
+
     return {"status": "success"}
 
 # 公開牆讀取
 @app.get("/api/messages/public")
 def get_public_messages():
-    db = read_db()
-    public_list = [m for m in db if m["is_visible"]]
+    messages = get_all_messages()
+    public_list = [
+        m for m in messages
+        if m["is_visible"]
+    ]
     public_list.reverse()
     return public_list
 
@@ -130,11 +160,11 @@ def verify_admin_login(data: VerifyInput):
     
     # 驗證成功，發放「長期萬用通行證Token」給前端
     long_term_token = f"TOKEN_VALID_{email}"
-    db = read_db()
+    messages = get_all_messages()
     return {
         "token": long_term_token,
-        "stats": {"total": len(db), "visible": sum(1 for m in db if m["is_visible"])},
-        "messages": db
+        "stats": get_stats(messages),
+        "messages": messages
     }
 
 # 3. 檢查長期權杖是否有效 (免重新登入用)
@@ -143,31 +173,50 @@ def check_token(data: VerifyInput):
     email = data.email.strip().lower()
     # 只要傳過來的 token 符合規則，就直接放行，不卡5分鐘限制！
     if data.otp == f"TOKEN_VALID_{email}":
-        db = read_db()
+        messages = get_all_messages()
         return {
-            "stats": {"total": len(db), "visible": sum(1 for m in db if m["is_visible"])},
-            "messages": db
+            "stats": get_stats(messages),
+            "messages": messages
         }
     raise HTTPException(status_code=401, detail="通行證過期，請重新登入")
 
 # 4. 後台操作：隱藏/顯示留言 (使用長期 Token 驗證)
 @app.post("/api/admin/toggle/{msg_id}")
-def toggle_message(msg_id: int, data: VerifyInput):
+def toggle_message(msg_id: str, data: VerifyInput):
+
     email = data.email.strip().lower()
-    
-    # 安全檢查
-    if data.otp != f"TOKEN_VALID_{email}": 
-        raise HTTPException(status_code=401, detail="未授權的操作，請重新登入")
-        
-    db = read_db()
-    for m in db:
-        if m["id"] == msg_id:
-            m["is_visible"] = not m["is_visible"]
-            write_db(db)
-            return {
-                "status": "success", 
-                "messages": db, 
-                "stats": {"total": len(db), "visible": sum(1 for x in db if x["is_visible"])}
-            }
-            
-    raise HTTPException(status_code=404, detail="找不到該則留言")
+
+    if data.otp != f"TOKEN_VALID_{email}":
+        raise HTTPException(
+            status_code=401,
+            detail="未授權的操作，請重新登入"
+        )
+
+    doc_ref = (
+        db_firestore
+        .collection("messages")
+        .document(msg_id)
+    )
+
+    doc = doc_ref.get()
+
+    if not doc.exists:
+        raise HTTPException(
+            status_code=404,
+            detail="找不到該則留言"
+        )
+
+    current = doc.to_dict()
+
+    doc_ref.update({
+        "is_visible":
+            not current["is_visible"]
+    })
+
+    messages = get_all_messages()
+
+    return {
+        "status": "success",
+        "messages": messages,
+        "stats": get_stats(messages)
+    }

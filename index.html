@@ -185,7 +185,7 @@
   <button type="button" id="adminToggle" class="admin-toggle" onclick="handleAdminToggle()">🔒</button>
 
   <script>
-    const API_BASE = "https://ck-farewell.onrender.com"; 
+    const API_BASE = "http://127.0.0.1:8000"; 
     
     // 初始化直接讀取本地儲存
     let state = { 
@@ -342,7 +342,7 @@
           <td>${m.timestamp}</td>
           <td>${escapeHtml(m.content)}</td>
           <td style="text-align:center;">
-            <button type="button" id="btn-toggle-${m.id}" class="btn-toggle-view ${m.is_visible ? '' : 'hidden-status'}" onclick="toggleMessage(${m.id}, event)">
+            <button type="button" id="btn-toggle-${m.id}" class="btn-toggle-view ${m.is_visible ? '' : 'hidden-status'}" onclick="toggleMessage('${m.id}', event)">
               ${m.is_visible ? "👁️ 顯示中" : "❌ 已隱藏"}
             </button>
           </td>
