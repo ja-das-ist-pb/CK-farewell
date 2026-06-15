@@ -19,11 +19,11 @@
     .modal-overlay.active { display: flex; }
     .modal-form {
       background: #fff; border-radius: 20px; padding: 32px 28px;
-      width: min(400px, 90vw); box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3); text-align: center;
+      width: min(430px, 90vw); box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3); text-align: center;
     }
     .modal-icon { font-size: 40px; margin-bottom: 8px; }
     .modal-title { margin: 0 0 6px; color: #4A2820; font-weight: 900; font-size: 20px; }
-    .modal-desc { margin: 0 0 18px; color: #8B6644; font-size: 13px; }
+    .modal-desc { margin: 0 0 18px; color: #8B6644; font-size: 18px; text-align: left;}
     .modal-input {
       width: 100%; border: 2px solid #C49080; border-radius: 10px; padding: 11px 14px;
       font-size: 16px; font-family: inherit; outline: none; margin-bottom: 10px; text-align: center;
@@ -61,7 +61,7 @@
     .header { text-align: center; padding-bottom: 22px; }
     .top-controls { display: flex; justify-content: flex-end; gap: 10px; margin-bottom: 10px; }
     .music-btn, .view-wall-btn { color: #fff; border: none; border-radius: 22px; padding: 9px 22px; font-size: 14px; font-weight: 700; cursor: pointer; box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2); }
-    .music-btn { background: #5B7B9A; } .music-btn.playing { background: #8B4444; }
+    .music-btn { background: #8B4444; } .music-btn.muted { background: #5B7B9A; }
     .view-wall-btn { background: #C49A1A; }
     .header h1 { color: #4A2820; font-size: clamp(30px, 6.5vw, 52px); font-weight: 900; letter-spacing: 5px; text-shadow: 2px 2px 0 #fff; }
     
@@ -108,9 +108,21 @@
 
   <div id="quizOverlay" class="modal-overlay">
     <div class="modal-form">
-      <div class="modal-icon">🔒</div>
-      <h3 class="modal-title">瀏覽權限驗證</h3>
-      <p class="modal-desc" style="color:#8B6644; font-weight:700;">此留言牆僅限 CK 及其主管瀏覽<br>請輸入專屬密碼</p>
+      <p class="modal-desc" style="color:#8B6644; font-weight:700;">
+        獻給我們摯愛的老闆、恩師 更是好友的CK：<br/><br/>
+
+        想說的話太多，<br/>
+        不捨的心情太深，<br/>
+        於是我們把它們化成文字，<br/>
+        留在這裡。<br/><br/>
+
+        請您一字綴一字，一點一滴地感受，<br/>
+        這些年來我們對您的感謝、思念與不捨<br/><br/>
+
+        願您帶著我們最真摯的祝福，<br/>
+        搭配你那CK style帥氣的背影<br/>
+        邁向下一段更偉大的航道。
+        </p>
       <input id="wallPasswordInput" type="password" class="modal-input" placeholder="請輸入驗證密碼">
       <div class="quiz-options">
         <button type="button" class="modal-btn" onclick="verifyWallPassword()">確認送出</button>
@@ -122,8 +134,8 @@
   <div class="container">
     <div class="header">
       <div class="top-controls">
-        <button id="viewWallBtn" class="view-wall-btn" onclick="openQuiz()">👀 點我看留言</button>
-        <button id="musicBtn" class="music-btn" onclick="toggleMusic()">🎻 播放配樂</button>
+        <button id="viewWallBtn" class="view-wall-btn" onclick="openQuiz()">👀 CK點我看留言</button>
+        <button id="musicBtn" class="music-btn muted" onclick="toggleMusic()">🔇 背景音樂：靜音</button>
       </div>
       <h1>惜別 CK 留言牆</h1>
     </div>
@@ -153,7 +165,6 @@
       <div class="public-wall">
         <h3 style="margin-bottom:15px; color:#4A2820;">💌 大家給 CK 的祝福與提問</h3>
         <div id="publicGrid" class="public-grid"></div>
-        <button type="button" class="modal-btn" style="margin-top:20px; background:#5B7B9A;" onclick="showWriteBlock()">✍️ 我也要寫留言</button>
       </div>
     </div>
 
@@ -281,7 +292,7 @@
             <div class="time">${m.timestamp}</div>
             <div class="text">${escapeHtml(m.content)}</div>
           </div>
-        `).join('');
+         `).join('');
       } catch(err) { console.error(err); }
     }
 
@@ -356,7 +367,7 @@
             </button>
           </td>
         </tr>
-      `).join('');
+       `).join('');
     }
 
     async function toggleMessage(msgId, event) {
@@ -410,23 +421,32 @@
       return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
     }
 
-    // MP3 配樂播放控制
+    // 修改點 2：改為獨立的播放 / 暫停（靜音切換）邏輯
     function toggleMusic() {
       const audio = document.getElementById("bgMusic");
       const musicBtn = document.getElementById("musicBtn");
       
       if (audio.paused) {
-        audio.play().catch(err => {
-          console.error("音樂播放失敗，可能需要使用者點擊互動才能播放", err);
-        });
-        musicBtn.classList.add("playing");
-        musicBtn.textContent = "⏸ 暫停音樂";
+        // 一開始是暫停的，按下後「開始播放」並切換外觀
+        audio.play().catch(err => console.log("播放失敗:", err));
+        audio.muted = false; // 確保有聲音
+        musicBtn.classList.remove("muted");
+        musicBtn.textContent = "🎵 背景音樂：開";
       } else {
-        audio.pause();
-        musicBtn.classList.remove("playing");
-        musicBtn.textContent = "🎻 播放配樂";
+        // 如果已經在播放了，就依照原本邏輯切換 靜音/開
+        if (audio.muted) {
+          audio.muted = false;
+          musicBtn.classList.remove("muted");
+          musicBtn.textContent = "🎵 背景音樂：開";
+        } else {
+          audio.muted = true;
+          musicBtn.classList.add("muted");
+          musicBtn.textContent = "🔇 背景音樂：靜音";
+        }
       }
     }
+
+    // 修改點 3：移除先前的全域隨意點擊解鎖事件，完全交給右上角按鈕控制
   </script>
 </body>
 </html>
