@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>惜別 CK 留言牆</title>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -34,9 +33,6 @@
     }
     .modal-btn-cancel { margin-top: 8px; background: transparent; color: #8B6644; border: none; font-size: 14px; cursor: pointer; padding: 6px; }
     .quiz-options { display: flex; flex-direction: column; gap: 10px; margin-top: 15px; }
-    .quiz-btn {
-      background: #FFFDF8; border: 2px solid #C49080; padding: 12px; border-radius: 10px; font-size: 15px; font-weight: 700; color: #4A2820; cursor: pointer;
-    }
     
     .section-block { display: none; }
     .section-block.active { display: block; }
@@ -88,6 +84,8 @@
 </head>
 <body>
 
+  <audio id="bgMusic" src="music.mp3" loop></audio>
+
   <div id="modalOverlay" class="modal-overlay">
     <div class="modal-form" id="emailStep">
       <div class="modal-icon">✉️</div>
@@ -110,13 +108,12 @@
 
   <div id="quizOverlay" class="modal-overlay">
     <div class="modal-form">
-      <div class="modal-icon">🔥</div>
-      <h3 class="modal-title">安全驗證問答</h3>
-      <p class="modal-desc" style="color:#C0392B; font-weight:700;">穩懋第一辣媽是誰？</p>
+      <div class="modal-icon">🔒</div>
+      <h3 class="modal-title">瀏覽權限驗證</h3>
+      <p class="modal-desc" style="color:#8B6644; font-weight:700;">此留言牆僅限 CK 及其主管瀏覽<br>請輸入專屬密碼</p>
+      <input id="wallPasswordInput" type="password" class="modal-input" placeholder="請輸入驗證密碼">
       <div class="quiz-options">
-        <button type="button" class="quiz-btn" onclick="passQuiz()">A. Ruby</button>
-        <button type="button" class="quiz-btn" onclick="passQuiz()">B. 陳香如</button>
-        <button type="button" class="quiz-btn" onclick="passQuiz()">C. Beautyru</button>
+        <button type="button" class="modal-btn" onclick="verifyWallPassword()">確認送出</button>
       </div>
       <button type="button" class="modal-btn-cancel" onclick="document.getElementById('quizOverlay').classList.remove('active')">不想看了</button>
     </div>
@@ -126,7 +123,7 @@
     <div class="header">
       <div class="top-controls">
         <button id="viewWallBtn" class="view-wall-btn" onclick="openQuiz()">👀 點我看留言</button>
-        <button id="musicBtn" class="music-btn" onclick="toggleMusic()">🎻 播放悲樂</button>
+        <button id="musicBtn" class="music-btn" onclick="toggleMusic()">🎻 播放配樂</button>
       </div>
       <h1>惜別 CK 留言牆</h1>
     </div>
@@ -187,15 +184,10 @@
   <script>
     const API_BASE = "https://ck-farewell.onrender.com"; 
     
-    // 初始化直接讀取本地儲存
     let state = { 
       email: localStorage.getItem("admin_email") || "", 
-      token: localStorage.getItem("admin_token") || "", 
-      playing: false, 
-      audioReady: false 
+      token: localStorage.getItem("admin_token") || ""
     };
-    
-    let reverb, master, strings, violin, cello, CP, BP, MP;
 
     function switchBlock(blockId) {
       document.querySelectorAll(".section-block").forEach(b => b.classList.remove("active"));
@@ -207,7 +199,6 @@
       document.getElementById("submitBtn").disabled = val.length === 0;
     }
 
-    // 網頁載入完成後自動檢查長期憑證
     window.addEventListener("DOMContentLoaded", async () => {
       if (state.token && state.email) {
         document.getElementById("adminToggle").textContent = "🔓";
@@ -253,11 +244,30 @@
       updateSubmitBtn();
     }
 
-    function openQuiz() { document.getElementById("quizOverlay").classList.add("active"); }
-    async function passQuiz() {
-      document.getElementById("quizOverlay").classList.remove("active");
-      switchBlock("blockPublicWall"); 
-      await fetchPublicMessages();
+    function openQuiz() { 
+      document.getElementById("wallPasswordInput").value = "";
+      document.getElementById("quizOverlay").classList.add("active"); 
+    }
+
+    async function verifyWallPassword() {
+      const password = document.getElementById("wallPasswordInput").value.trim();
+      if(!password) return alert("請輸入密碼");
+
+      try {
+        const res = await fetch(`${API_BASE}/api/messages/verify-wall`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ password })
+        });
+        if(res.ok) {
+          document.getElementById("quizOverlay").classList.remove("active");
+          switchBlock("blockPublicWall"); 
+          await fetchPublicMessages();
+        } else {
+          alert("密碼錯誤，拒絕存取！");
+          document.getElementById("wallPasswordInput").value = "";
+        }
+      } catch(err) { alert("連線後端驗證失敗"); }
     }
 
     function showWriteBlock() { switchBlock("blockFrontend"); }
@@ -277,7 +287,6 @@
 
     function handleAdminToggle() {
       if(state.token) { 
-        // 如果已經是登入狀態，點擊鎖頭就只是在「管理後台」跟「前台表單」切換，不強制登出！
         const isAdminActive = document.getElementById("blockAdmin").classList.contains("active");
         if(isAdminActive) switchBlock("blockFrontend"); else switchBlock("blockAdmin");
       } else { 
@@ -351,7 +360,6 @@
     }
 
     async function toggleMessage(msgId, event) {
-      // 保險 1：如果有點擊事件傳進來，強制阻止瀏覽器的任何預設跳轉或重整行為
       if (event) {
         event.preventDefault();
         event.stopPropagation();
@@ -366,11 +374,9 @@
         if(res.ok) {
           const data = await res.json();
           
-          // 更新統計數字
           document.getElementById("statTotal").textContent = data.stats.total;
           document.getElementById("statVisible").textContent = data.stats.visible;
           
-          // 精準局部變色
           const theBtn = document.getElementById(`btn-toggle-${msgId}`);
           if (theBtn) {
             if (theBtn.classList.contains("hidden-status")) {
@@ -404,28 +410,22 @@
       return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
     }
 
-    // 悲樂控制
-    async function toggleMusic() {
-      if (!state.audioReady) {
-        try {
-          await Tone.start(); Tone.Transport.bpm.value = 50; Tone.Transport.timeSignature = [4, 4];
-          reverb = new Tone.Reverb({ decay: 7, wet: 0.68, preDelay: 0.03 }); await reverb.generate();
-          master = new Tone.Volume(-4).toDestination(); reverb.connect(master);
-          strings = new Tone.PolySynth(Tone.Synth, { oscillator: { type: "triangle8" }, envelope: { attack: 2.2, decay: 0.4, sustain: 0.75, release: 6 }, volume: -18 }).connect(reverb);
-          violin = new Tone.Synth({ oscillator: { type: "sawtooth4" }, envelope: { attack: 0.5, decay: 0.2, sustain: 0.9, release: 5 }, volume: -10, portamento: 0.07 });
-          new Tone.Tremolo({ frequency: 4.5, depth: 0.2 }).start().chain(violin, reverb);
-          cello = new Tone.Synth({ oscillator: { type: "triangle" }, envelope: { attack: 1.2, decay: 0.5, sustain: 0.75, release: 5 }, volume: -24 }).connect(reverb);
-          CP = new Tone.Part((t, v) => strings.triggerAttackRelease(v.n, v.d, t), [{ time: "0:0:0", n: ["D3", "F3", "A3", "D4"], d: "2m" }, { time: "2:0:0", n: ["C3", "E3", "G3", "C4"], d: "2m" }, { time: "4:0:0", n: ["Bb2", "D3", "F3", "Bb3"], d: "2m" }, { time: "6:0:0", n: ["A2", "C#3", "E3", "A3"], d: "2m" }]); CP.loop = true; CP.loopEnd = "8m"; CP.start(0);
-          BP = new Tone.Part((t, v) => cello.triggerAttackRelease(v.n, v.d, t), [{ time: "0:0:0", n: "D2", d: "1m" }, { time: "1:0:0", n: "D2", d: "1m" }, { time: "2:0:0", n: "C2", d: "1m" }, { time: "3:0:0", n: "C2", d: "1m" }, { time: "4:0:0", n: "Bb1", d: "1m" }, { time: "5:0:0", n: "Bb1", d: "1m" }, { time: "6:0:0", n: "A1", d: "1m" }, { time: "7:0:0", n: "A1", d: "1m" }]); BP.loop = true; BP.loopEnd = "8m"; BP.start(0);
-          MP = new Tone.Part((t, v) => violin.triggerAttackRelease(v.n, v.d, t), [{ time: "0:0:0", n: "F5", d: "2n" }, { time: "0:2:0", n: "E5", d: "2n" }, { time: "1:0:0", n: "D5", d: "2n." }, { time: "1:3:0", n: "C5", d: "4n" }, { time: "2:0:0", n: "E5", d: "2n" }, { time: "2:2:0", n: "D5", d: "2n" }, { time: "3:0:0", n: "C5", d: "2n." }, { time: "3:3:0", n: "Bb4", d: "4n" }, { time: "4:0:0", n: "D5", d: "2n" }, { time: "4:2:0", n: "C5", d: "2n" }, { time: "5:0:0", n: "Bb4", d: "2n" }, { time: "5:2:0", n: "A4", d: "2n" }, { time: "6:0:0", n: "G4", d: "2n" }, { time: "6:2:0", n: "F4", d: "4n" }, { time: "6:3:0", n: "E4", d: "4n" }, { time: "7:0:0", n: "A4", d: "1m" }]); MP.loop = true; MP.loopEnd = "8m"; MP.start("+0.05");
-          Tone.Transport.start(); state.audioReady = true; state.playing = true;
-        } catch (err) { console.error(err); }
+    // MP3 配樂播放控制
+    function toggleMusic() {
+      const audio = document.getElementById("bgMusic");
+      const musicBtn = document.getElementById("musicBtn");
+      
+      if (audio.paused) {
+        audio.play().catch(err => {
+          console.error("音樂播放失敗，可能需要使用者點擊互動才能播放", err);
+        });
+        musicBtn.classList.add("playing");
+        musicBtn.textContent = "⏸ 暫停音樂";
       } else {
-        if (state.playing) Tone.Transport.pause(); else Tone.Transport.start();
-        state.playing = !state.playing;
+        audio.pause();
+        musicBtn.classList.remove("playing");
+        musicBtn.textContent = "🎻 播放配樂";
       }
-      document.getElementById("musicBtn").classList.toggle("playing", state.playing);
-      document.getElementById("musicBtn").textContent = state.playing ? "⏸ 暫停音樂" : "🎻 播放悲樂";
     }
   </script>
 </body>

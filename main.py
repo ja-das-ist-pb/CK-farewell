@@ -4,7 +4,7 @@ import json
 import datetime
 import smtplib
 from email.mime.text import MIMEText
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import firebase_admin
@@ -39,6 +39,9 @@ ADMIN_EMAIL_LIST = ["paulpb0725@gmail.com", "chunhansung@gmail.com"]
 SMTP_USER = os.getenv("SMTP_USER")
 SMTP_PASSWORD = os.getenv("SMTP_PASSWORD")
 
+# 從環境變數讀取留言牆查看密碼，若未設定則預設為 WeLoveCK
+WALL_PASSWORD = os.getenv("WALL_PASSWORD", "WeLoveCK")
+
 
 class MessageInput(BaseModel):
     text: str
@@ -49,6 +52,11 @@ class EmailInput(BaseModel):
 class VerifyInput(BaseModel):
     email: str
     otp: str  # 登入時傳入6位數驗證碼，後續操作時傳入長期 Token
+
+# 新增密碼驗證的模型
+class WallPasswordInput(BaseModel):
+    password: str
+
 
 def get_all_messages():
     docs = db_firestore.collection("messages").stream()
@@ -113,6 +121,16 @@ def submit_message(data: MessageInput):
     ).add(new_msg)
 
     return {"status": "success"}
+
+# 驗證留言牆專屬密碼 (由前端呼叫)
+@app.post("/api/messages/verify-wall")
+def verify_wall_password(data: WallPasswordInput):
+    if data.password == WALL_PASSWORD:
+        return {"status": "success", "detail": "密碼驗證通過"}
+    raise HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED, 
+        detail="密碼錯誤，拒絕存取"
+    )
 
 # 公開牆讀取
 @app.get("/api/messages/public")
